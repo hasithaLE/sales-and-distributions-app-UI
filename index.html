@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dairy Distribution App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --blue: #007ACC;
+            --cream: #FFF9F0;
+            --green: #4CAF50;
+            --light-blue: #E6F3FF;
+            --gray: #718096;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cream);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+        
+        .app-container {
+            max-width: 414px;
+            margin: 0 auto;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .back-button {
+            color: var(--blue);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .btn {
+            background-color: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-secondary {
+            background-color: var(--light-blue);
+            color: var(--blue);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--gray);
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: white;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .tag {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .tag-pending {
+            background-color: #FFF3E0;
+            color: #FF9800;
+        }
+        
+        .tag-delivered {
+            background-color: #E8F5E9;
+            color: var(--green);
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            max-width: 414px;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            margin: 0 auto;
+            z-index: 10;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--gray);
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: var(--blue);
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .quantity-stepper {
+            display: flex;
+            align-items: center;
+        }
+        
+        .stepper-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--light-blue);
+            color: var(--blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .quantity {
+            margin: 0 12px;
+            font-weight: 500;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .checkbox-container input {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            accent-color: var(--blue);
+        }
+        
+        .offline-banner {
+            background-color: #FFECB3;
+            color: #FF8F00;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .offline-banner svg {
+            margin-right: 8px;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--light-blue);
+            border-radius: 50%;
+        }
+        
+        .screen-content {
+            padding-bottom: 80px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Login Screen -->
+        <div class="screen active" id="login-screen">
+            <div class="flex flex-col justify-center h-full">
+                <div class="logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#007ACC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 2h8a2 2 0 0 1 2 2v2h2v2h-2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8H4V6h2V4a2 2 0 0 1 2-2z"></path>
+                        <line x1="12" y1="10" x2="12" y2="18"></line>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-center mb-8">Dairy Distribution</h1>
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" class="input-field" placeholder="Enter your email">
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="input-field" placeholder="Enter your password">
+                </div>
+                <button class="btn w-full mt-4" onclick="showScreen('home-screen')">Login</button>
+                <p class="text-center mt-4 text-blue-600 cursor-pointer">Forgot password?</p>
+            </div>
+        </div>
+
+        <!-- Home Dashboard Screen -->
+        <div class="screen" id="home-screen">
+            <div class="header">
+                <h1 class="text-xl font-bold">Dashboard</h1>
+                <div class="flex items-center">
+                    <div class="mr-4 flex items-center">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+                        <span class="text-sm">Synced</span>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="screen-content">
+                <div class="card bg-blue-50 border-l-4 border-blue-500 mb-6">
+                    <h2 class="text-lg font-medium mb-2">Today's Route</h2>
+                    <div class="flex justify-between">
+                        <div>
+                            <p class="text-gray-600">Customers</p>
+                            <p class="text-2xl font-bold">12</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Completed</p>
+                            <p class="text-2xl font-bold">5</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Pending</p>
+                            <p class="text-2xl font-bold">7</p>
+                        </div>
+                    </div>
+                    <button class="btn w-full mt-4" onclick="showScreen('route-screen')">View Route</button>
+                </div>
+                
+                <h2 class="text-lg font-medium mb-3">Vehicle Stock Overview</h2>
+                <div class="card">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="font-medium">Total Products</p>
+                        <p class="font-bold">24</p>
+                    </div>
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="font-medium">Low Stock Items</p>
+                        <p class="font-bold text-orange-500">3</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <p class="font-medium">Out of Stock</p>
+                        <p class="font-bold text-red-500">1</p>
+                    </div>
+                    <button class="btn-secondary w-full mt-4" onclick="showScreen('stock-screen')">View Stock</button>
+                </div>
+                
+                <h2 class="text-lg font-medium mt-6 mb-3">Today's Summary</h2>
+                <div class="card">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="font-medium">Total Sales</p>
+                        <p class="font-bold">$1,245.50</p>
+                    </div>
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="font-medium">Orders Fulfilled</p>
+                        <p class="font-bold">5</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <p class="font-medium">Pending Orders</p>
+                        <p class="font-bold">3</p>
+                    </div>
+                    <button class="btn-secondary w-full mt-4" onclick="showScreen('fulfillment-screen')">View Pending</button>
+                </div>
+            </div>
+            
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="showScreen('home-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>Home</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('route-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                        <line x1="8" y1="2" x2="8" y2="18"></line>
+                        <line x1="16" y1="6" x2="16" y2="22"></line>
+                    </svg>
+                    <span>Route</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('order-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span>Orders</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('stock-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>Stock</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('settings-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span>Settings</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Route List Screen -->
+        <div class="screen" id="route-screen">
+            <div class="header">
+                <div class="back-button" onclick="showScreen('home-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back
+                </div>
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-4">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </div>
+            </div>
+            
+            <h1 class="text-xl font-bold mb-4">Today's Route</h1>
+            
+            <div class="input-group">
+                <input type="text" class="input-field" placeholder="Search customers...">
+            </div>
+            
+            <div class="screen-content">
+                <div class="card" onclick="showScreen('order-screen')">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-medium">Sunshine Cafe</h3>
+                        <span class="tag tag-pending">Pending</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-2">123 Main Street</p>
+                    <div class="flex justify-between text-sm">
+                        <span>Scheduled: 9:00 AM</span>
+                        <span class="text-blue-600">Order: $245.50</span>
+                    </div>
+                </div>
+                
+                <div class="card" onclick="showScreen('order-screen')">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-medium">Green Grocers</h3>
+                        <span class="tag tag-delivered">Delivered</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-2">456 Oak Avenue</p>
+                    <div class="flex justify-between text-sm">
+                        <span>Scheduled: 9:30 AM</span>
+                        <span class="text-blue-600">Order: $187.25</span>
+                    </div>
+                </div>
+                
+                <div class="card" onclick="showScreen('order-screen')">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-medium">Fresh Market</h3>
+                        <span class="tag tag-pending">Pending</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-2">789 Pine Road</p>
+                    <div class="flex justify-between text-sm">
+                        <span>Scheduled: 10:15 AM</span>
+                        <span class="text-blue-600">Order: $312.75</span>
+                    </div>
+                </div>
+                
+                <div class="card" onclick="showScreen('order-screen')">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-medium">Corner Deli</h3>
+                        <span class="tag tag-delivered">Delivered</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-2">101 Maple Street</p>
+                    <div class="flex justify-between text-sm">
+                        <span>Scheduled: 11:00 AM</span>
+                        <span class="text-blue-600">Order: $156.00</span>
+                    </div>
+                </div>
+                
+                <div class="card" onclick="showScreen('order-screen')">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-medium">Riverside Bakery</h3>
+                        <span class="tag tag-pending">Pending</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-2">222 River Road</p>
+                    <div class="flex justify-between text-sm">
+                        <span>Scheduled: 11:45 AM</span>
+                        <span class="text-blue-600">Order: $98.50</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="showScreen('home-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>Home</span>
+                </div>
+                <div class="nav-item active" onclick="showScreen('route-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                        <line x1="8" y1="2" x2="8" y2="18"></line>
+                        <line x1="16" y1="6" x2="16" y2="22"></line>
+                    </svg>
+                    <span>Route</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('order-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span>Orders</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('stock-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>Stock</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('settings-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span>Settings</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Taking Screen -->
+        <div class="screen" id="order-screen">
+            <div class="header">
+                <div class="back-button" onclick="showScreen('route-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back
+                </div>
+                <h2 class="text-lg font-medium">Sunshine Cafe</h2>
+            </div>
+            
+            <div class="input-group mt-4">
+                <input type="text" class="input-field" placeholder="Search products...">
+            </div>
+            
+            <div class="screen-content">
+                <div class="card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Whole Milk</h3>
+                            <p class="text-gray-600 text-sm">1 Gallon</p>
+                            <p class="text-blue-600 font-medium mt-1">$4.50</p>
+                        </div>
+                        <div class="quantity-stepper">
+                            <button class="stepper-btn" onclick="decrementQuantity(this)">-</button>
+                            <span class="quantity">0</span>
+                            <button class="stepper-btn" onclick="incrementQuantity(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Low-Fat Milk</h3>
+                            <p class="text-gray-600 text-sm">1 Gallon</p>
+                            <p class="text-blue-600 font-medium mt-1">$4.25</p>
+                        </div>
+                        <div class="quantity-stepper">
+                            <button class="stepper-btn" onclick="decrementQuantity(this)">-</button>
+                            <span class="quantity">0</span>
+                            <button class="stepper-btn" onclick="incrementQuantity(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Heavy Cream</h3>
+                            <p class="text-gray-600 text-sm">1 Quart</p>
+                            <p class="text-blue-600 font-medium mt-1">$5.75</p>
+                        </div>
+                        <div class="quantity-stepper">
+                            <button class="stepper-btn" onclick="decrementQuantity(this)">-</button>
+                            <span class="quantity">0</span>
+                            <button class="stepper-btn" onclick="incrementQuantity(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Butter</h3>
+                            <p class="text-gray-600 text-sm">1 lb</p>
+                            <p class="text-blue-600 font-medium mt-1">$3.95</p>
+                        </div>
+                        <div class="quantity-stepper">
+                            <button class="stepper-btn" onclick="decrementQuantity(this)">-</button>
+                            <span class="quantity">0</span>
+                            <button class="stepper-btn" onclick="incrementQuantity(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Cheddar Cheese</h3>
+                            <p class="text-gray-600 text-sm">8 oz</p>
+                            <p class="text-blue-600 font-medium mt-1">$4.25</p>
+                        </div>
+                        <div class="quantity-stepper">
+                            <button class="stepper-btn" onclick="decrementQuantity(this)">-</button>
+                            <span class="quantity">0</span>
+                            <button class="stepper-btn" onclick="incrementQuantity(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Greek Yogurt</h3>
+                            <p class="text-gray-600 text-sm">32 oz</p>
+                            <p class="text-blue-600 font-medium mt-1">$5.50</p>
+                        </div>
+                        <div class="quantity-stepper">
+                            <button class="stepper-btn" onclick="decrementQuantity(this)">-</button>
+                            <span class="quantity">0</span>
+                            <button class="stepper-btn" onclick="incrementQuantity(this)">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="fixed bottom-0 left-0 w-full max-w-414px bg-white border-t border-gray-200 p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-medium">Total Items:</span>
+                    <span class="font-bold" id="total-items">0</span>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-medium">Total Amount:</span>
+                    <span class="font-bold text-xl" id="total-amount">$0.00</span>
+                </div>
+                <button class="btn w-full" onclick="showScreen('fulfillment-screen')">Place Order</button>
+            </div>
+        </div>
+
+        <!-- Pending Fulfillment Screen -->
+        <div class="screen" id="fulfillment-screen">
+            <div class="header">
+                <div class="back-button" onclick="showScreen('home-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back
+                </div>
+                <h2 class="text-lg font-medium">Pending Orders</h2>
+            </div>
+            
+            <div class="screen-content">
+                <div class="card">
+                    <h3 class="font-medium mb-3">Sunshine Cafe</h3>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="item1">
+                        <label for="item1">Whole Milk (2) - $9.00</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="item2">
+                        <label for="item2">Heavy Cream (1) - $5.75</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="item3">
+                        <label for="item3">Cheddar Cheese (3) - $12.75</label>
+                    </div>
+                    <div class="input-group mt-3">
+                        <label for="notes1">Delivery Notes</label>
+                        <textarea id="notes1" class="input-field" rows="2" placeholder="Add notes..."></textarea>
+                    </div>
+                    <div class="flex justify-between mt-3">
+                        <span class="font-medium">Total: $27.50</span>
+                        <button class="btn" onclick="showScreen('route-screen')">Complete</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 class="font-medium mb-3">Fresh Market</h3>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="item4">
+                        <label for="item4">Whole Milk (5) - $22.50</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="item5">
+                        <label for="item5">Low-Fat Milk (3) - $12.75</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="item6">
+                        <label for="item6">Butter (4) - $15.80</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="item7">
+                        <label for="item7">Greek Yogurt (2) - $11.00</label>
+                    </div>
+                    <div class="input-group mt-3">
+                        <label for="notes2">Delivery Notes</label>
+                        <textarea id="notes2" class="input-field" rows="2" placeholder="Add notes..."></textarea>
+                    </div>
+                    <div class="flex justify-between mt-3">
+                        <span class="font-medium">Total: $62.05</span>
+                        <button class="btn" onclick="showScreen('route-screen')">Complete</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 class="font-medium mb-3">Riverside Bakery</h3>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="item8">
+                        <label for="item8">Heavy Cream (4) - $23.00</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="item9">
+                        <label for="item9">Butter (6) - $23.70</label>
+                    </div>
+                    <div class="input-group mt-3">
+                        <label for="notes3">Delivery Notes</label>
+                        <textarea id="notes3" class="input-field" rows="2" placeholder="Add notes..."></textarea>
+                    </div>
+                    <div class="flex justify-between mt-3">
+                        <span class="font-medium">Total: $46.70</span>
+                        <button class="btn" onclick="showScreen('route-screen')">Complete</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="showScreen('home-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>Home</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('route-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                        <line x1="8" y1="2" x2="8" y2="18"></line>
+                        <line x1="16" y1="6" x2="16" y2="22"></line>
+                    </svg>
+                    <span>Route</span>
+                </div>
+                <div class="nav-item active" onclick="showScreen('order-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span>Orders</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('stock-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>Stock</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('settings-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span>Settings</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Stock Screen -->
+        <div class="screen" id="stock-screen">
+            <div class="header">
+                <div class="back-button" onclick="showScreen('home-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back
+                </div>
+                <h2 class="text-lg font-medium">Vehicle Stock</h2>
+            </div>
+            
+            <div class="input-group mt-4">
+                <input type="text" class="input-field" placeholder="Search products...">
+            </div>
+            
+            <div class="screen-content">
+                <div class="card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Whole Milk</h3>
+                            <p class="text-gray-600 text-sm">1 Gallon</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-4">24</span>
+                            <button class="btn-secondary px-3 py-1" onclick="updateStock(this)">Update</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Low-Fat Milk</h3>
+                            <p class="text-gray-600 text-sm">1 Gallon</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-4">18</span>
+                            <button class="btn-secondary px-3 py-1" onclick="updateStock(this)">Update</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-yellow-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Heavy Cream</h3>
+                            <p class="text-gray-600 text-sm">1 Quart</p>
+                            <p class="text-orange-500 text-sm font-medium">Low Stock</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-4">5</span>
+                            <button class="btn-secondary px-3 py-1" onclick="updateStock(this)">Update</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Butter</h3>
+                            <p class="text-gray-600 text-sm">1 lb</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-4">32</span>
+                            <button class="btn-secondary px-3 py-1" onclick="updateStock(this)">Update</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-yellow-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Cheddar Cheese</h3>
+                            <p class="text-gray-600 text-sm">8 oz</p>
+                            <p class="text-orange-500 text-sm font-medium">Low Stock</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-4">7</span>
+                            <button class="btn-secondary px-3 py-1" onclick="updateStock(this)">Update</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-red-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Greek Yogurt</h3>
+                            <p class="text-gray-600 text-sm">32 oz</p>
+                            <p class="text-red-500 text-sm font-medium">Out of Stock</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-4">0</span>
+                            <button class="btn-secondary px-3 py-1" onclick="updateStock(this)">Update</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Sour Cream</h3>
+                            <p class="text-gray-600 text-sm">16 oz</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-4">15</span>
+                            <button class="btn-secondary px-3 py-1" onclick="updateStock(this)">Update</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bg-yellow-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-medium">Cottage Cheese</h3>
+                            <p class="text-gray-600 text-sm">16 oz</p>
+                            <p class="text-orange-500 text-sm font-medium">Low Stock</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold mr-4">4</span>
+                            <button class="btn-secondary px-3 py-1" onclick="updateStock(this)">Update</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="showScreen('home-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>Home</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('route-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                        <line x1="8" y1="2" x2="8" y2="18"></line>
+                        <line x1="16" y1="6" x2="16" y2="22"></line>
+                    </svg>
+                    <span>Route</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('order-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span>Orders</span>
+                </div>
+                <div class="nav-item active" onclick="showScreen('stock-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>Stock</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('settings-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span>Settings</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings/Sync Screen -->
+        <div class="screen" id="settings-screen">
+            <div class="header">
+                <div class="back-button" onclick="showScreen('home-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back
+                </div>
+                <h2 class="text-lg font-medium">Settings</h2>
+            </div>
+            
+            <div class="screen-content">
+                <div class="offline-banner">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+                        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+                        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+                        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                    </svg>
+                    <span>Offline Mode Active</span>
+                </div>
+                
+                <div class="card">
+                    <h3 class="font-medium mb-3">Sync Status</h3>
+                    <p class="text-gray-600 mb-3">Last synced: Today, 8:45 AM</p>
+                    <button class="btn w-full flex items-center justify-center" id="sync-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                        </svg>
+                        Sync Now
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <h3 class="font-medium mb-3">App Settings</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <span>Offline Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span>Auto-Sync</span>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Push Notifications</span>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 class="font-medium mb-3">Account</h3>
+                    <p class="text-gray-600 mb-1">John Smith</p>
+                    <p class="text-gray-600 mb-3">john.smith@dairyco.com</p>
+                    <button class="btn-secondary w-full mb-3">Edit Profile</button>
+                    <button class="btn w-full bg-red-500" onclick="showScreen('login-screen')">Logout</button>
+                </div>
+                
+                <div class="card">
+                    <h3 class="font-medium mb-3">App Info</h3>
+                    <p class="text-gray-600 mb-1">Version: 2.4.1</p>
+                    <p class="text-gray-600">© 2023 Dairy Distribution Co.</p>
+                </div>
+            </div>
+            
+            <div class="bottom-nav">
+                <div class="nav-item" onclick="showScreen('home-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>Home</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('route-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                        <line x1="8" y1="2" x2="8" y2="18"></line>
+                        <line x1="16" y1="6" x2="16" y2="22"></line>
+                    </svg>
+                    <span>Route</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('order-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span>Orders</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('stock-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>Stock</span>
+                </div>
+                <div class="nav-item active" onclick="showScreen('settings-screen')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span>Settings</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--blue);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .slider.round {
+            border-radius: 24px;
+        }
+        
+        .slider.round:before {
+            border-radius: 50%;
+        }
+    </style>
+
+    <script>
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show the selected screen
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        function incrementQuantity(button) {
+            const quantityElement = button.previousElementSibling;
+            let quantity = parseInt(quantityElement.textContent);
+            quantity++;
+            quantityElement.textContent = quantity;
+            updateTotal();
+        }
+        
+        function decrementQuantity(button) {
+            const quantityElement = button.nextElementSibling;
+            let quantity = parseInt(quantityElement.textContent);
+            if (quantity > 0) {
+                quantity--;
+                quantityElement.textContent = quantity;
+                updateTotal();
+            }
+        }
+        
+        function updateTotal() {
+            let totalItems = 0;
+            let totalAmount = 0;
+            
+            document.querySelectorAll('.quantity').forEach(quantityElement => {
+                const quantity = parseInt(quantityElement.textContent);
+                totalItems += quantity;
+                
+                if (quantity > 0) {
+                    const priceText = quantityElement.closest('.card').querySelector('.text-blue-600').textContent;
+                    const price = parseFloat(priceText.replace('$', ''));
+                    totalAmount += price * quantity;
+                }
+            });
+            
+            document.getElementById('total-items').textContent = totalItems;
+            document.getElementById('total-amount').textContent = '$' + totalAmount.toFixed(2);
+        }
+        
+        function updateStock(button) {
+            const stockElement = button.previousElementSibling;
+            const currentStock = parseInt(stockElement.textContent);
+            
+            // Simple prompt for demo purposes
+            const newStock = prompt('Update stock quantity:', currentStock);
+            
+            if (newStock !== null && !isNaN(newStock)) {
+                stockElement.textContent = newStock;
+                
+                // Update styling based on stock level
+                const card = button.closest('.card');
+                const productNameElement = card.querySelector('h3');
+                const lowStockElement = card.querySelector('.text-orange-500');
+                const outOfStockElement = card.querySelector('.text-red-500');
+                
+                // Remove existing status classes
+                card.classList.remove('bg-yellow-50', 'bg-red-50');
+                
+                // Remove existing status text
+                if (lowStockElement) lowStockElement.remove();
+                if (outOfStockElement) outOfStockElement.remove();
+                
+                // Add appropriate status based on new stock level
+                if (parseInt(newStock) === 0) {
+                    card.classList.add('bg-red-50');
+                    const statusElement = document.createElement('p');
+                    statusElement.className = 'text-red-500 text-sm font-medium';
+                    statusElement.textContent = 'Out of Stock';
+                    productNameElement.parentNode.appendChild(statusElement);
+                } else if (parseInt(newStock) <= 7) {
+                    card.classList.add('bg-yellow-50');
+                    const statusElement = document.createElement('p');
+                    statusElement.className = 'text-orange-500 text-sm font-medium';
+                    statusElement.textContent = 'Low Stock';
+                    productNameElement.parentNode.appendChild(statusElement);
+                }
+            }
+        }
+        
+        // Add animation to sync button
+        document.getElementById('sync-button').addEventListener('click', function() {
+            const syncIcon = this.querySelector('svg');
+            syncIcon.style.transition = 'transform 1s';
+            syncIcon.style.transform = 'rotate(360deg)';
+            
+            setTimeout(() => {
+                alert('Sync completed successfully!');
+                syncIcon.style.transform = 'rotate(0deg)';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
